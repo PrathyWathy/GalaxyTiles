@@ -58,11 +58,11 @@ class MainWidget(RelativeLayout):
     state_game_has_started = False
 
     menu_title = StringProperty("G   A   L   A   X   Y")
-    high_score = StringProperty("HIGHEST: 0")
+    high_score = StringProperty()
+    best = StringProperty()
     menu_button_title = StringProperty("START")
     score_text = StringProperty("SCORE: 0")
     level = StringProperty("LEVEL: 1")
-
     sound_begin = None
     sound_galaxy = None
     sound_gameover_impact = None
@@ -104,6 +104,10 @@ class MainWidget(RelativeLayout):
         self.sound_gameover_impact.volume = .6
 
     def reset_game(self):
+        file = open('highscore.txt', 'r')
+        self.best = file.read()
+        file.close()
+        self.high_score = self.best
         self.current_offset_y = 0
         self.current_y_loop = 0
         self.current_speed_x = 0
@@ -321,19 +325,19 @@ class MainWidget(RelativeLayout):
             self.menu_title = "G  A  M  E    O  V  E  R"
             self.menu_button_title = "RESTART"
             self.menu_widget.opacity = 1
+            if self.score_text >= self.high_score:
+                file = open('highscore.txt', 'w')
+                file.write("HIGH " + self.score_text)
+                file.close()
             self.sound_music1.stop()
             self.sound_gameover_impact.play()
             Clock.schedule_once(self.play_game_over_voice_sound, 3)
-            print("GAME OVER")
-            if self.score_text > self.high_score:
-                self.high_score = "HIGH SCORE: " + str(int(self.current_y_loop))
 
     def play_game_over_voice_sound(self, dt):
         if self.state_game_over:
             self.sound_gameover_voice.play()
 
     def on_menu_button_pressed(self):
-        print("START")
         if self.state_game_over:
             self.sound_restart.play()
         else:
