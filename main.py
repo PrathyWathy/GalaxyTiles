@@ -58,11 +58,13 @@ class MainWidget(RelativeLayout):
     state_game_has_started = False
 
     menu_title = StringProperty("G   A   L   A   X   Y")
-    high_score = StringProperty()
-    best = StringProperty()
+    high_score = StringProperty("")
+    best = StringProperty("")
+    score = StringProperty("")
     menu_button_title = StringProperty("START")
     score_text = StringProperty("SCORE: 0")
     level = StringProperty("LEVEL: 1")
+    high = StringProperty("HIGH ")
     sound_begin = None
     sound_galaxy = None
     sound_gameover_impact = None
@@ -322,16 +324,17 @@ class MainWidget(RelativeLayout):
 
         if not self.check_ship_collision() and not self.state_game_over:
             self.state_game_over = True
+            self.score = self.score_text
             self.menu_title = "G  A  M  E    O  V  E  R"
             self.menu_button_title = "RESTART"
             self.menu_widget.opacity = 1
-            if self.score_text >= self.high_score:
-                file = open('highscore.txt', 'w')
-                file.write("HIGH " + self.score_text)
-                file.close()
             self.sound_music1.stop()
             self.sound_gameover_impact.play()
             Clock.schedule_once(self.play_game_over_voice_sound, 3)
+            if self.score > self.best:
+                file = open('highscore.txt', 'w')
+                file.write(self.score)
+                file.close()
 
     def play_game_over_voice_sound(self, dt):
         if self.state_game_over:
