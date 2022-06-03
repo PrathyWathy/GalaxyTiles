@@ -1,6 +1,5 @@
 import random
 
-
 from kivy.config import Config
 from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
@@ -19,7 +18,6 @@ from kivy.uix.widget import Widget
 
 Builder.load_file("menu.kv")
 
-
 class MainWidget(RelativeLayout):
     from transforms import transform, transform_2D, transform_perspective
     from user_actions import keyboard_closed, on_keyboard_up, on_keyboard_down, on_touch_up, on_touch_down
@@ -36,7 +34,7 @@ class MainWidget(RelativeLayout):
     H_LINES_SPACING = .1  # percentage in screen height
     horizontal_lines = []
 
-    SPEED = .2
+    SPEED = .8
     current_offset_y = 0
     current_y_loop = 0
 
@@ -58,13 +56,9 @@ class MainWidget(RelativeLayout):
     state_game_has_started = False
 
     menu_title = StringProperty("G   A   L   A   X   Y")
-    high_score = StringProperty("")
-    best = StringProperty("")
-    score = StringProperty("")
     menu_button_title = StringProperty("START")
-    score_text = StringProperty("SCORE: 0")
-    level = StringProperty("LEVEL: 1")
-    high = StringProperty("HIGH ")
+    score_txt = StringProperty()
+
     sound_begin = None
     sound_galaxy = None
     sound_gameover_impact = None
@@ -106,30 +100,20 @@ class MainWidget(RelativeLayout):
         self.sound_gameover_impact.volume = .6
 
     def reset_game(self):
-        file = open('highscore.txt', 'r')
-        self.best = file.read()
-        file.close()
-        self.high_score = self.best
         self.current_offset_y = 0
         self.current_y_loop = 0
         self.current_speed_x = 0
         self.current_offset_x = 0
-        self.level = "LEVEL: 1"
-        self.score_text = "SCORE: 0"
-        self.SPEED = .2
-        self.SPEED_X = 1.5
-
         self.tiles_coordinates = []
+        self.score_txt = "SCORE: " + str(self.current_y_loop)
         self.pre_fill_tiles_coordinates()
         self.generate_tiles_coordinates()
-
         self.state_game_over = False
 
     def is_desktop(self):
-        if platform in ('linux', 'win', 'macosx'):
-                return True
-        else:
-                return False
+        if platform in ('linux', 'windows', 'macosx'):
+            return True
+        return False
 
     def init_ship(self):
         with self.canvas:
@@ -180,7 +164,7 @@ class MainWidget(RelativeLayout):
                 self.tiles.append(Quad())
 
     def pre_fill_tiles_coordinates(self):
-        for i in range(0, 8):
+        for i in range(0, 10):
             self.tiles_coordinates.append((0, i))
 
     def generate_tiles_coordinates(self):
@@ -198,13 +182,15 @@ class MainWidget(RelativeLayout):
             last_x = last_coordinates[0]
             last_y = last_coordinates[1] + 1
 
+        print("foo1")
+
         for i in range(len(self.tiles_coordinates), self.NB_TILES):
             r = random.randint(0, 2)
             # 0 -> straight
             # 1 -> right
             # 2 -> left
             start_index = -int(self.V_NB_LINES / 2) + 1
-            end_index = start_index + self.V_NB_LINES - 2
+            end_index = start_index + self.V_NB_LINES - 1
             if last_x <= start_index:
                 r = 1
             if last_x >= end_index:
@@ -224,10 +210,12 @@ class MainWidget(RelativeLayout):
 
             last_y += 1
 
+        print("foo2")
+
     def init_vertical_lines(self):
         with self.canvas:
             Color(1, 1, 1)
-            # self.line = Line(points=[100, 0, 100, 100])
+            #self.line = Line(points=[100, 0, 100, 100])
             for i in range(0, self.V_NB_LINES):
                 self.vertical_lines.append(Line())
 
@@ -310,37 +298,29 @@ class MainWidget(RelativeLayout):
             while self.current_offset_y >= spacing_y:
                 self.current_offset_y -= spacing_y
                 self.current_y_loop += 1
-                self.score_text = "SCORE: " + str(self.current_y_loop)
-
-                if (self.current_y_loop / 65.0).is_integer():
-                    self.SPEED += 0.1
-                    self.SPEED_X += 0.1
-                    self.level = "LEVEL: " + str(int(self.current_y_loop / 65 + 1))
-
+                self.score_txt = "SCORE: " + str(self.current_y_loop)
                 self.generate_tiles_coordinates()
+                print("loop : " + str(self.current_y_loop))
 
             speed_x = self.current_speed_x * self.width / 100
             self.current_offset_x += speed_x * time_factor
 
         if not self.check_ship_collision() and not self.state_game_over:
             self.state_game_over = True
-            self.score = self.score_text
             self.menu_title = "G  A  M  E    O  V  E  R"
             self.menu_button_title = "RESTART"
             self.menu_widget.opacity = 1
             self.sound_music1.stop()
             self.sound_gameover_impact.play()
             Clock.schedule_once(self.play_game_over_voice_sound, 3)
-            if self.score > self.best:
-                file = open('highscore.txt', 'w')
-                file.write(self.score)
-                file.close()
+            print("GAME OVER")
 
     def play_game_over_voice_sound(self, dt):
         if self.state_game_over:
             self.sound_gameover_voice.play()
 
     def on_menu_button_pressed(self):
+        print("BUTTON")
         if self.state_game_over:
             self.sound_restart.play()
         else:
@@ -351,11 +331,12 @@ class MainWidget(RelativeLayout):
         self.menu_widget.opacity = 0
 
 
+
+
 class GalaxyApp(App):
     pass
 
 
 GalaxyApp().run()
-
 
 
